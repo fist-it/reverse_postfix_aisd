@@ -1,0 +1,16 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-std=c++13",
+      "-o",
+      "executable",
+      "main.cpp"
+    ],
+    "directory": "/Users/fist_it/Documents/pg_eti/semestr_2/OOP/LAB/lab2",
+    "file": "/Users/fist_it/Documents/pg_eti/semestr_2/OOP/LAB/lab2/main.cpp",
+    "output": "/Users/fist_it/Documents/pg_eti/semestr_2/OOP/LAB/lab2/executable"
+  }
+]
