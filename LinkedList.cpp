@@ -1,9 +1,10 @@
 #include "LinkedList.h"
 #include <iostream>
 
-Node::Node() { this->previous = 0; }
+/// CharNode {{{
+CharNode::CharNode() { this->previous = 0; }
 
-Node::Node(char input[], Node *prev) {
+CharNode::CharNode(char input[], CharNode *prev) {
   this->previous = prev;
 
   int i = 0;
@@ -13,7 +14,7 @@ Node::Node(char input[], Node *prev) {
   }
 }
 
-void Node::SetValue(char input[]) {
+void CharNode::SetValue(char input[]) {
   int i = 0;
   while (input[i] != '\0') {
     this->value[i] = input[i];
@@ -21,12 +22,37 @@ void Node::SetValue(char input[]) {
   }
 }
 
-void Node::SetPrevious(Node *prev) { this->previous = prev; }
+void CharNode::SetPrevious(CharNode *prev) { this->previous = prev; }
 
-char *Node::GetValue() {
+char *CharNode::GetValue() {
   printf("\ngetting value from %p:\n", value);
   return value;
 }
-Node *Node::GetPrev() { return previous; }
+CharNode *CharNode::GetPrev() { return previous; }
 
-Node::~Node() {}
+CharNode::~CharNode() {}
+
+// }}}
+
+// IntNode {{{
+IntNode::IntNode() { this->previous = 0; }
+
+IntNode::IntNode(int input, IntNode *prev) {
+  this->previous = prev;
+  this->value = input;
+}
+
+void IntNode::SetValue(int input) { this->value = input; }
+
+void IntNode::SetPrevious(IntNode *prev) { this->previous = prev; }
+
+int IntNode::GetValue() {
+  printf("\ngetting value from %d:\n", value);
+  return value;
+}
+
+IntNode *IntNode::GetPrev() { return previous; }
+
+IntNode::~IntNode() {}
+
+// }}}

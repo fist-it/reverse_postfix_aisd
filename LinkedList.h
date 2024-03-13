@@ -1,14 +1,28 @@
-class Node {
+class CharNode {
 private:
   char value[4];
-  Node *previous;
+  CharNode *previous;
 
 public:
-  Node();
-  Node(char input[], Node *prev);
-  void SetPrevious(Node *prev);
+  CharNode();
+  CharNode(char input[], CharNode *prev);
+  void SetPrevious(CharNode *prev);
   void SetValue(char input[]);
   char *GetValue();
-  Node *GetPrev();
-  ~Node();
+  CharNode *GetPrev();
+  ~CharNode();
+};
+
+class IntNode {
+  int value;
+  IntNode *previous;
+
+public:
+  IntNode();
+  IntNode(int input, IntNode *prev);
+  void SetPrevious(IntNode *prev);
+  void SetValue(int input);
+  int GetValue();
+  IntNode *GetPrev();
+  ~IntNode();
 };

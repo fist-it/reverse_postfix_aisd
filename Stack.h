@@ -1,15 +1,29 @@
 #include "LinkedList.h"
 
-class Stack {
+class CharStack {
 private:
-  Node *top;
+  CharNode *top;
   int size;
 
 public:
-  Stack();
+  CharStack();
   void push(char input[]);
   void pop();
   void print();
   void free_stack();
-  ~Stack();
+  ~CharStack();
+};
+
+class IntStack {
+private:
+  IntNode *top;
+  int size;
+
+public:
+  IntStack();
+  void push(int input);
+  void pop();
+  void print();
+  void free_stack();
+  ~IntStack();
 };

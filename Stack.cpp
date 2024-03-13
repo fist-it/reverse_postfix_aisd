@@ -1,47 +1,98 @@
 #include "Stack.h"
 #include <iostream>
 
-Stack::Stack() {
-  this->top = new Node;
+// CharStack {{{
+CharStack::CharStack() {
+  this->top = new CharNode;
   this->size = 0;
 }
 
-void Stack::push(char input[]) {
+void CharStack::push(char input[]) {
   if (!size) {
     top->SetValue(input);
     size++;
   } else {
-    Node *temp = this->top;
-    top = new Node;
+    CharNode *temp = this->top;
+    top = new CharNode;
     top->SetPrevious(temp);
     top->SetValue(input);
     size++;
   }
 }
 
-void Stack::pop() {
+void CharStack::pop() {
   if (size) {
-    Node *temp = top->GetPrev();
+    CharNode *temp = top->GetPrev();
     delete top;
     top = temp;
     size--;
   }
 }
 
-void Stack::print() {
+void CharStack::print() {
   std::cout << "\nsize: " << size << "\n";
-  Node *current = this->top;
+  CharNode *current = this->top;
   for (int i = 0; i < size; i++) {
     std::cout << "\nnode " << size - i << ": " << current->GetValue() << "\n";
     current = current->GetPrev();
   }
 }
 
-void Stack::free_stack() {
+void CharStack::free_stack() {
   int iter = size;
   for (int i = 0; i < iter; i++) {
     pop();
   }
 }
 
-Stack::~Stack() { free_stack(); }
+CharStack::~CharStack() { free_stack(); }
+
+// }}}
+
+// IntStack {{{
+IntStack::IntStack() {
+  this->top = new IntNode;
+  this->size = 0;
+}
+
+void IntStack::push(int input) {
+  if (!size) {
+    top->SetValue(input);
+    size++;
+  } else {
+    IntNode *temp = this->top;
+    top = new IntNode;
+    top->SetPrevious(temp);
+    top->SetValue(input);
+    size++;
+  }
+}
+
+void IntStack::pop() {
+  if (size) {
+    IntNode *temp = top->GetPrev();
+    delete top;
+    top = temp;
+    size--;
+  }
+}
+
+void IntStack::print() {
+  std::cout << "\nsize: " << size << "\n";
+  IntNode *current = this->top;
+  for (int i = 0; i < size; i++) {
+    std::cout << "\nnode " << size - i << ": " << current->GetValue() << "\n";
+    current = current->GetPrev();
+  }
+}
+
+void IntStack::free_stack() {
+  int iter = size;
+  for (int i = 0; i < iter; i++) {
+    pop();
+  }
+}
+
+IntStack::~IntStack() { free_stack(); }
+
+// }}}

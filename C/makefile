@@ -1,7 +1,7 @@
 all: compile run
 
 compile:
-	g++ -g *.cpp -o ./build/executable
+	gcc main.c -o ./build/executable
 
 run:
 	./build/executable
