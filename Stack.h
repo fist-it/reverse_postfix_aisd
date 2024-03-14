@@ -9,6 +9,7 @@ public:
   CharStack();
   void push(char input[]);
   void pop();
+  void clear();
   void print();
   void free_stack();
   ~CharStack();

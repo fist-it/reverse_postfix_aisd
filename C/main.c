@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #define CHARNODE_SIZE 4
-
+// stack structs {{{
 typedef struct intNode intNode;
 struct intNode {
   int value;
@@ -23,7 +23,9 @@ typedef struct {
   charNode *top;
   int size;
 } charStack;
+// }}}
 
+// stack func {{{
 void intpush(intStack *stack, int input) {
   if (!stack->size) {
     stack->top = (intNode *)malloc(sizeof(intNode));
@@ -85,6 +87,16 @@ void freecharstack(charStack *stack) {
     charpop(stack);
   }
 }
+// }}}
+
+// string {{{
+
+typedef struct {
+  char *data;
+  int capacity;
+} string;
+
+// }}}
 
 int main(int argc, char **argv) {
   charStack chars;

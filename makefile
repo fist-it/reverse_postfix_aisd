@@ -4,4 +4,4 @@ compile:
 	g++ -g *.cpp -o ./build/executable
 
 run:
-	./build/executable
+	./build/executable > out.txt

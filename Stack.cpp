@@ -29,11 +29,16 @@ void CharStack::pop() {
   }
 }
 
+void CharStack::clear() {
+  while (size > 0) {
+    pop();
+  }
+}
+
 void CharStack::print() {
-  std::cout << "\nsize: " << size << "\n";
   CharNode *current = this->top;
-  for (int i = 0; i < size; i++) {
-    std::cout << "\nnode " << size - i << ": " << current->GetValue() << "\n";
+  while (current != 0) {
+    std::cout << current->GetValue();
     current = current->GetPrev();
   }
 }

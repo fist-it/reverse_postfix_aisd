@@ -24,10 +24,7 @@ void CharNode::SetValue(char input[]) {
 
 void CharNode::SetPrevious(CharNode *prev) { this->previous = prev; }
 
-char *CharNode::GetValue() {
-  printf("\ngetting value from %p:\n", value);
-  return value;
-}
+char *CharNode::GetValue() { return value; }
 CharNode *CharNode::GetPrev() { return previous; }
 
 CharNode::~CharNode() {}
