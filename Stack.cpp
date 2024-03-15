@@ -2,13 +2,11 @@
 #include <iostream>
 
 // CharStack {{{
-CharStack::CharStack() {
-  this->top = new CharNode;
-  this->size = 0;
-}
+CharStack::CharStack() { this->size = 0; }
 
 void CharStack::push(char input[]) {
   if (!size) {
+    this->top = new CharNode;
     top->SetValue(input);
     size++;
   } else {
@@ -26,12 +24,6 @@ void CharStack::pop() {
     delete top;
     top = temp;
     size--;
-  }
-}
-
-void CharStack::clear() {
-  while (size > 0) {
-    pop();
   }
 }
 

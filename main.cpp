@@ -51,7 +51,6 @@ void printstr(string *str) {
 }
 
 // }}}
-
 int main(int argc, char **argv) {
   CharStack stos;
   IntStack stosliczb;
@@ -96,7 +95,7 @@ int main(int argc, char **argv) {
         if (topweight > 2) {
           stos.print();
           topweight = 0;
-          stos.clear();
+          stos.free_stack();
         } else {
           topweight = 2;
           stos.push(buff);
@@ -106,7 +105,7 @@ int main(int argc, char **argv) {
         if (topweight > 2) {
           stos.print();
           topweight = 0;
-          stos.clear();
+          stos.free_stack();
         } else {
           topweight = 2;
           stos.push(buff);
@@ -118,7 +117,7 @@ int main(int argc, char **argv) {
         if (topweight > 1) {
           stos.print();
           topweight = 0;
-          stos.clear();
+          stos.free_stack();
         } else {
           topweight = 1;
           stos.push(buff);
@@ -128,7 +127,7 @@ int main(int argc, char **argv) {
         if (topweight > 1) {
           stos.print();
           topweight = 0;
-          stos.clear();
+          stos.free_stack();
         } else {
           topweight = 1;
           stos.push(buff);
@@ -150,7 +149,9 @@ int main(int argc, char **argv) {
       }
     }
     stos.print();
-    stos.clear();
+    stos.free_stack();
+    buff[0] = ' ';
+    std::cout << std::endl;
   }
 
   char chuj;
