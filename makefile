@@ -1,10 +1,13 @@
-all: compile run show_out
+all: read
 
-compile:
-	@g++ -g *.cpp -o ./build/executable && echo "compiled, input:"
+build:
+	cmake --build build
 
-run:
-	@./build/executable > out.txt
+run: build
+	@./build/build/executable/executable > out.txt
 
-show_out:
+read: run
 	@cat out.txt
+
+debug:
+	lldb ./build/build/executable/executable
