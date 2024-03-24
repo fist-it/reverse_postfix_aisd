@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
-project(project1 C)
+project(postfix)
 
-set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(project1 main.c)
+add_executable(postfix main.c)

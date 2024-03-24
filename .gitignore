@@ -1,5 +1,1 @@
-.DS_Store
-build
-*.dSYM
-.idea
 cmake-build-debug
