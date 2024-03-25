@@ -4,6 +4,7 @@
 #define CHARNODE_SIZE 4
 #define BUFFSIZE 11
 #define INIT_STR_SIZE 12
+#define MAX_TAB_SIZE 14
 
 // priority enum {{{
 
@@ -84,7 +85,8 @@ void appendchar(string *to, char input) {
 
 void appendbytable(string *to, int input_size, char *alt_input) {
     int i = 0;
-    if (to->length + input_size + 1 > to->capacity) { // 1 more space for space
+    if (to->length + input_size + 1 > to->capacity ||
+            (!input_size && to->length + MAX_TAB_SIZE + 1 > to->capacity) ) { // 1 more space for space
         if (to->capacity) {
             //  to->data = (char *)realloc(to->data, to->capacity * 1.5);
             // realloc null handling
@@ -112,7 +114,11 @@ void appendbytable(string *to, int input_size, char *alt_input) {
     appendchar(to, ' ');
 }
 
-void freestr(string *str) { free(str->data); }
+void freestr(string *str) {
+    str->capacity = 0;
+    str->length = 0;
+    free(str->data);
+}
 
 // }}}
 
@@ -189,6 +195,14 @@ void stackprint(stack *stos, string *output) {
     }
 }
 
+void intstackprint(countstack *stos) {
+    intNode *current = stos->top;
+    while (current != NULL) {
+        printf("%d ", current->value);
+        current = current->prev;
+    }
+}
+
 void handleoperator(stack *stos, int targetvalue, int is_rightassociative,
                     string *output, char *buff) {
     while (stos->size != 0 && (get_priority(stos->top->value) > targetvalue ||
@@ -202,6 +216,7 @@ void handleoperator(stack *stos, int targetvalue, int is_rightassociative,
 
 
 // }}}
+
 
 
 void appendmin(string *postfix, countstack *counter) {
@@ -223,6 +238,179 @@ void appendmax(string *postfix, countstack *counter) {
     appendbytable(postfix, 0, count);
     intpop(counter);
 }
+
+int is_digit(char input) {
+    if(input - '0' >= 0 && input - '0' <= 9) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+
+
+int calculate(string *postfix) {
+    countstack nums;
+    nums.size = 0;
+
+
+    int i=0;
+    int num, mresult;
+    int mcount = 0;
+    while(postfix->data[i] != '.') {
+        if (postfix->data[i] == ' ') {
+            i++;
+            continue;
+        }
+
+        if (is_digit(postfix->data[i])) {
+            num = 0;
+            while (is_digit(postfix->data[i])) {
+                num = num * 10 + (int) (postfix->data[i] - '0');
+                i++;
+            }
+            intpush(&nums, num);
+
+        } else if( postfix->data[i] == '-' && is_digit(postfix->data[i+1])) {
+            num = 0;
+            i++;
+            while (is_digit(postfix->data[i])) {
+                num = num * 10 + (int) (postfix->data[i] - '0');
+                i++;
+            }
+            intpush(&nums, -1 * num);
+        }
+        else {
+            if(postfix->data[i] == 'N') {
+                printf("N ");
+                intstackprint(&nums);
+                printf("\n");
+                nums.top->value *= -1;
+                i++;
+            } else if(postfix->data[i] == 'I') {
+                printf("IF ");
+                intstackprint(&nums);
+                printf("\n");
+                int c = nums.top->value;
+                intpop(&nums);
+                int b = nums.top->value;
+                intpop(&nums);
+                int a = nums.top->value;
+                intpop(&nums);
+
+                if(a>0) {
+                    intpush(&nums, b);
+                } else {
+                    intpush(&nums, c);
+                }
+                i++;
+            } else {
+                int val1 = nums.top->value;
+                intpop(&nums);
+                int val2 = nums.top->value;
+                intpop(&nums);
+                switch(postfix->data[i]) {
+                    case '+':
+                        printf("+ %d %d ", val1, val2);
+                        intstackprint(&nums);
+                        printf("\n");
+                        intpush(&nums, val2 + val1);
+                        break;
+                    case '-':
+                        printf("- %d %d ", val1, val2);
+                        intstackprint(&nums);
+                        printf("\n");
+                        intpush(&nums, val2 - val1);
+                        break;
+                    case '*':
+                        printf("* %d %d ", val1, val2);
+                        intstackprint(&nums);
+                        printf("\n");
+                        intpush(&nums, val2 * val1);
+                        break;
+                    case '/':
+
+                        printf("/ %d %d ", val1, val2);
+                        intstackprint(&nums);
+                        printf("\n");
+                        if(val1 == 0) {
+                            printf("ERROR\n");
+                            return 1;
+                        }
+                        intpush(&nums, val2 / val1);
+                        break;
+
+                    case 'M':
+                        i++;
+                        mresult = val2;
+
+                        switch(postfix->data[i]) {
+                            case 'I':
+                                if(val2>val1){
+                                    mresult = val1;
+                                }
+                                i+=2;
+                                while (is_digit(postfix->data[i])) {
+                                    mcount = mcount * 10 + (int) (postfix->data[i] - '0');
+                                    i++;
+                                }
+                                printf("MIN%d %d %d ", mcount, val1, val2);
+                                intstackprint(&nums);
+                                if(mcount > 2){
+                                    for(int j=0; j<mcount-2; j++) {
+                                        if(nums.size != 0) {
+                                            if (mresult > nums.top->value) {
+                                                mresult = nums.top->value;
+                                            }
+                                            val1 = val2;
+                                            val2 = nums.top->value;
+                                            intpop(&nums);
+                                        }
+                                    }
+
+                                }
+                                break;
+                            case 'A':
+                                if(val2<val1){
+                                    mresult = val1;
+                                }
+                                i+=2;
+                                while (is_digit(postfix->data[i])) {
+                                    mcount = mcount * 10 + (int) (postfix->data[i] - '0');
+                                    i++;
+                                }
+                                printf("MAX%d %d %d ", mcount, val1, val2);
+                                intstackprint(&nums);
+                                if(mcount > 2){
+                                    for(int j=0; j<mcount-2; j++) {
+                                        if(nums.size != 0) {
+                                            if (mresult < nums.top->value) {
+                                                mresult = nums.top->value;
+                                            }
+                                            val1 = val2;
+                                            val2 = nums.top->value;
+                                            intpop(&nums);
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+                        intpush(&nums, mresult);
+                        mcount = 0;
+                        printf("\n");
+                }
+            }
+
+        }
+        i++;
+    }
+    printf("%d", nums.top->value);
+    freeintstack(&nums);
+    return 0;
+}
+
+
 
 int main() {
     stack stos;
@@ -260,7 +448,7 @@ int main() {
                         charpop(&stos);
                     }
                     charpop(&stos);
-                    if (stos.top->value[0] == 'M') {
+                    if (stos.size && stos.top->value[0] == 'M') {
                         if (stos.top->value[1] == 'I') {
                             appendmin(&postfix, &counter);
                         } else {
@@ -275,6 +463,7 @@ int main() {
                     break;
                 case 'I':
                     push(&stos, buff);
+                    intpush(&counter, 1); // only so that counting arguments works
                     break;
                 case ',':
                     while (stos.top->value[0] != '(') {
@@ -291,10 +480,17 @@ int main() {
             }
         }
         stackprint(&stos, &postfix);
+        printf("%s\n", postfix.data);
+        appendbytable(&postfix, 2, ".");
+        calculate(&postfix);
         printf("\n");
+
+
+        freestr(&postfix);
+        printf("\n");
+        buff[0] = ' ';
+        freecharstack(&stos);
+        freeintstack(&counter);
     }
-    freecharstack(&stos);
-    freeintstack(&counter);
-    printf("%s", postfix.data);
-    freestr(&postfix);
+    return 0;
 }
