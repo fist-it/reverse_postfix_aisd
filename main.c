@@ -137,7 +137,7 @@ void push(stack *stack, const char *input) {
         stack->top->value[i] = input[i];
         i++;
     }
-    stack->top->value[CHARNODE_SIZE - 1] = '\0';
+    stack->top->value[i] = '\0';
     stack->size++;
 }
 
@@ -189,7 +189,6 @@ void freecharstack(stack *stack) {
 void stackprint(stack *stos, string *output) {
     charNode *current = stos->top;
     while (current != NULL) {
-        // sprintf(output->data, current->value);
         appendbytable(output, 0, current->value);
         current = current->prev;
     }
@@ -368,7 +367,6 @@ int calculate(string *postfix) {
                                             intpop(&nums);
                                         }
                                     }
-
                                 }
                                 break;
                             case 'A':
@@ -424,6 +422,7 @@ int main() {
     int input_iter;
     scanf("%d", &input_iter);
     char buff[BUFFSIZE];
+    buff[0] = ' ';
     for (int i = 0; i < input_iter; i++) {
         while (buff[0] != '.') {
             scanf("%s", buff);
@@ -458,9 +457,6 @@ int main() {
                     }
                     break;
                 case 'M':
-                    push(&stos, buff);
-                    intpush(&counter, 1);
-                    break;
                 case 'I':
                     push(&stos, buff);
                     intpush(&counter, 1); // only so that counting arguments works
@@ -484,7 +480,6 @@ int main() {
         appendbytable(&postfix, 2, ".");
         calculate(&postfix);
         printf("\n");
-
 
         freestr(&postfix);
         printf("\n");
