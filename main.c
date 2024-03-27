@@ -91,7 +91,7 @@ void appendbytable(string *to, int input_size, char *alt_input) {
     if (to->capacity) {
       //  to->data = (char *)realloc(to->data, to->capacity * 1.5);
       // realloc null handling
-      void *temp = realloc(to->data, to->capacity * 1.5);
+      void *temp = realloc(to->data, to->capacity * 3 / 2);
       if (temp != NULL) {
         to->data = (char *)temp;
       } else {
@@ -124,66 +124,66 @@ void freestr(string *str) {
 // }}}
 
 // stack func {{{
-void push(stack *stack, const char *input) {
-  if (!stack->size) {
-    stack->top = (charNode *)malloc(sizeof(charNode));
-    stack->top->prev = NULL;
+void push(stack *stos, const char *input) {
+  if (!stos->size) {
+    stos->top = (charNode *)malloc(sizeof(charNode));
+    stos->top->prev = NULL;
   } else {
-    charNode *temp = stack->top;
-    stack->top = (charNode *)malloc(sizeof(charNode));
-    stack->top->prev = temp;
+    charNode *temp = stos->top;
+    stos->top = (charNode *)malloc(sizeof(charNode));
+    stos->top->prev = temp;
   }
   int i = 0;
   while (input[i] != '\0') {
-    stack->top->value[i] = input[i];
+    stos->top->value[i] = input[i];
     i++;
   }
-  stack->top->value[i] = '\0';
-  stack->size++;
+  stos->top->value[i] = '\0';
+  stos->size++;
 }
 
-void intpush(countstack *stack, const int input) {
-  if (!stack->size) {
-    stack->top = (intNode *)malloc(sizeof(intNode));
-    stack->top->prev = NULL;
+void intpush(countstack *stos, const int input) {
+  if (!stos->size) {
+    stos->top = (intNode *)malloc(sizeof(intNode));
+    stos->top->prev = NULL;
   } else {
-    intNode *temp = stack->top;
-    stack->top = (intNode *)malloc(sizeof(intNode));
-    stack->top->prev = temp;
+    intNode *temp = stos->top;
+    stos->top = (intNode *)malloc(sizeof(intNode));
+    stos->top->prev = temp;
   }
-  stack->top->value = input;
-  stack->size++;
+  stos->top->value = input;
+  stos->size++;
 }
 
-void intpop(countstack *stack) {
-  if (stack->size) {
-    intNode *temp = stack->top->prev;
-    free(stack->top);
-    stack->top = temp;
-    stack->size--;
+void intpop(countstack *stos) {
+  if (stos->size) {
+    intNode *temp = stos->top->prev;
+    free(stos->top);
+    stos->top = temp;
+    stos->size--;
   }
 }
 
-void freeintstack(countstack *stack) {
-  int iter = stack->size;
+void freeintstack(countstack *stos) {
+  int iter = stos->size;
   for (int i = 0; i < iter; i++) {
-    intpop(stack);
+    intpop(stos);
   }
 }
 
-void charpop(stack *stack) {
-  if (stack->size) {
-    charNode *temp = stack->top->prev;
-    free(stack->top);
-    stack->top = temp;
-    stack->size--;
+void charpop(stack *stos) {
+  if (stos->size) {
+    charNode *temp = stos->top->prev;
+    free(stos->top);
+    stos->top = temp;
+    stos->size--;
   }
 }
 
-void freecharstack(stack *stack) {
-  int iter = stack->size;
+void freecharstack(stack *stos) {
+  int iter = stos->size;
   for (int i = 0; i < iter; i++) {
-    charpop(stack);
+    charpop(stos);
   }
 }
 
@@ -360,10 +360,8 @@ int calculate(string *postfix) {
             }
             printf("MIN%d %d ", mcount, val1);
             intstackprint(&nums);
-
-
             if (mcount > 1) {
-              for (int j = 0; j < mcount - 2; j++) {
+              for (int j = 0; j < mcount - 1; j++) {
                 if (nums.size != 0) {
                   if (mresult > nums.top->value) {
                     mresult = nums.top->value;
@@ -382,7 +380,7 @@ int calculate(string *postfix) {
             printf("MAX%d %d ", mcount, val1);
             intstackprint(&nums);
             if (mcount > 1) {
-              for (int j = 0; j < mcount - 2; j++) {
+              for (int j = 0; j < mcount - 1; j++) {
                 if (nums.size != 0) {
                   if (mresult < nums.top->value) {
                     mresult = nums.top->value;
@@ -425,7 +423,7 @@ int main() {
   buff[0] = ' ';
   for (int i = 0; i < input_iter; i++) {
     while (buff[0] != '.') {
-      scanf("%s", buff);
+      scanf("%10s", buff);
       switch (buff[0]) {
       case '+':
       case '-':
@@ -454,6 +452,8 @@ int main() {
             appendmax(&postfix, &counter);
           }
           charpop(&stos);
+        } else if(stos.size && stos.top->value[0] == 'I'){
+            intpop(&counter);
         }
         break;
       case 'M':
@@ -466,7 +466,7 @@ int main() {
           appendbytable(&postfix, 0, stos.top->value);
           charpop(&stos);
         }
-        if(counter.size) {
+        if(counter.size && stos.top->value[0]) {
             counter.top->value++;
         }
         break;
