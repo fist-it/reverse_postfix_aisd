@@ -1,208 +1,10 @@
+#include "QOL.h"
+#include "Stack.h"
+#include "String.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHARNODE_SIZE 4
-#define BUFFSIZE 11
-#define INIT_STR_SIZE 12
-#define MAX_TAB_SIZE 14
-
-// priority enum {{{
-
-typedef enum {
-  ADD = 1,
-  SUBTRACT = 1,
-  MULTIPLY = 2,
-  DIVIDE = 2,
-  IF = 3,
-  MIN = 3,
-  MAX = 3,
-  N = 3,
-  PAR = 4
-} Priority;
-
-int get_priority(const char op[]) {
-  switch (op[0]) {
-  case '+':
-  case '-':
-    return ADD;
-  case '*':
-  case '/':
-    return MULTIPLY;
-  case 'M':
-    return MIN;
-  case 'N':
-    return N;
-  case 'I':
-    return IF;
-  case 'P':
-    return PAR;
-  default:
-    return -1;
-  }
-}
-
-// }}}
-
-// stack structs {{{
-typedef struct charNode charNode;
-
-struct charNode {
-  char value[CHARNODE_SIZE];
-  charNode *prev;
-};
-
-typedef struct {
-  charNode *top;
-  int size;
-} stack;
-
-typedef struct intNode intNode;
-
-struct intNode {
-  int value;
-  intNode *prev;
-};
-
-typedef struct {
-  intNode *top;
-  int size;
-} countstack;
-
-// }}}
-
-// string {{{
-
-typedef struct {
-  char *data;
-  int capacity;
-  int length; // indexes from 0 to length-1
-} string;
-
-void appendchar(string *to, char input) {
-  to->data[to->length] = input;
-  to->length++;
-}
-
-void appendbytable(string *to, int input_size, char *alt_input) {
-  int i = 0;
-  if (to->length + input_size + 1 > to->capacity ||
-      (!input_size && to->length + MAX_TAB_SIZE + 1 >
-                          to->capacity)) { // 1 more space for space
-    if (to->capacity) {
-      //  to->data = (char *)realloc(to->data, to->capacity * 1.5);
-      // realloc null handling
-      void *temp = realloc(to->data, to->capacity * 3 / 2);
-      if (temp != NULL) {
-        to->data = (char *)temp;
-      } else {
-        free(to->data);
-        fprintf(stderr, "FATAL: string realloc error; aborting");
-        exit(2);
-      }
-      to->capacity *= 3;
-      to->capacity /= 2;
-    } else {
-      to->data = (char *)malloc(sizeof(char) * INIT_STR_SIZE);
-      to->capacity = INIT_STR_SIZE;
-    }
-  }
-  while (alt_input[i] != '\0') {
-    if (alt_input[i] != '_') {
-      appendchar(to, alt_input[i]);
-    }
-    i++;
-  }
-  appendchar(to, ' ');
-}
-
-void freestr(string *str) {
-  str->capacity = 0;
-  str->length = 0;
-  free(str->data);
-}
-
-// }}}
-
-// stack func {{{
-void push(stack *stos, const char *input) {
-  if (!stos->size) {
-    stos->top = (charNode *)malloc(sizeof(charNode));
-    stos->top->prev = NULL;
-  } else {
-    charNode *temp = stos->top;
-    stos->top = (charNode *)malloc(sizeof(charNode));
-    stos->top->prev = temp;
-  }
-  int i = 0;
-  while (input[i] != '\0') {
-    stos->top->value[i] = input[i];
-    i++;
-  }
-  stos->top->value[i] = '\0';
-  stos->size++;
-}
-
-void intpush(countstack *stos, const int input) {
-  if (!stos->size) {
-    stos->top = (intNode *)malloc(sizeof(intNode));
-    stos->top->prev = NULL;
-  } else {
-    intNode *temp = stos->top;
-    stos->top = (intNode *)malloc(sizeof(intNode));
-    stos->top->prev = temp;
-  }
-  stos->top->value = input;
-  stos->size++;
-}
-
-void intpop(countstack *stos) {
-  if (stos->size) {
-    intNode *temp = stos->top->prev;
-    free(stos->top);
-    stos->top = temp;
-    stos->size--;
-  }
-}
-
-void freeintstack(countstack *stos) {
-  int iter = stos->size;
-  for (int i = 0; i < iter; i++) {
-    intpop(stos);
-  }
-}
-
-void charpop(stack *stos) {
-  if (stos->size) {
-    charNode *temp = stos->top->prev;
-    free(stos->top);
-    stos->top = temp;
-    stos->size--;
-  }
-}
-
-void freecharstack(stack *stos) {
-  int iter = stos->size;
-  for (int i = 0; i < iter; i++) {
-    charpop(stos);
-  }
-}
-
-void stackprint(stack *stos, string *output) {
-  charNode *current = stos->top;
-  while (current != NULL) {
-    appendbytable(output, 0, current->value);
-    current = current->prev;
-  }
-}
-
-void intstackprint(countstack *stos) {
-  intNode *current = stos->top;
-  while (current != NULL) {
-    printf("%d ", current->value);
-    current = current->prev;
-  }
-}
-
+// rpn-related functions {{{
 void handleoperator(stack *stos, int targetvalue, int is_rightassociative,
                     string *output, char *buff) {
   while (stos->size != 0 && (get_priority(stos->top->value) > targetvalue ||
@@ -214,11 +16,12 @@ void handleoperator(stack *stos, int targetvalue, int is_rightassociative,
   push(stos, buff);
 }
 
-// }}}
+// single-case Mxx functions preventing space after Mxx in output (for argument
+// counting)
 
-// QOL {{{
-
-void appendmin(string *postfix, countstack *counter) {
+void appendmin(string *postfix, countstack *counter) { // by default appending
+                                                       // by table places a
+                                                       // space after
   appendchar(postfix, 'M');
   appendchar(postfix, 'I');
   appendchar(postfix, 'N');
@@ -228,7 +31,10 @@ void appendmin(string *postfix, countstack *counter) {
   intpop(counter);
 }
 
-void appendmax(string *postfix, countstack *counter) {
+void appendmax(string *postfix, countstack *counter) { // by default appending
+                                                       // by table places a
+                                                       // space after
+
   appendchar(postfix, 'M');
   appendchar(postfix, 'A');
   appendchar(postfix, 'X');
@@ -238,17 +44,81 @@ void appendmax(string *postfix, countstack *counter) {
   intpop(counter);
 }
 
-int is_digit(char input) {
-  if (input - '0' >= 0 && input - '0' <= 9) {
+// }}}
+
+// simple operator calculations {{{
+
+void calc_plus(countstack *const nums, const int *val1) {
+  printf("+ %d ", *val1);
+  intstackprint(nums);
+  printf("\n");
+  int result = nums->top->value + *val1;
+  intpop(nums);
+  intpush(nums, result);
+}
+
+void calc_minus(countstack *const nums, const int *val1) {
+  printf("- %d ", *val1);
+  intstackprint(nums);
+  printf("\n");
+  int result = nums->top->value - *val1;
+  intpop(nums);
+  intpush(nums, result);
+}
+
+void calc_multiply(countstack *const nums, const int *val1) {
+  printf("* %d ", *val1);
+  intstackprint(nums);
+  printf("\n");
+  int result = nums->top->value * *val1;
+  intpop(nums);
+  intpush(nums, result);
+}
+
+int calc_division(countstack *const nums, const int *val1) {
+  printf("/ %d ", *val1);
+  intstackprint(nums);
+  printf("\n");
+  if (*val1 == 0) {
+    printf("ERROR\n");
     return 1;
-  } else {
-    return 0;
   }
+  int result = nums->top->value / *val1;
+  intpop(nums);
+  intpush(nums, result);
+  return 0;
+}
+
+void calc_number(countstack *const nums, const string *postfix,
+                 int *const iterator);
+
+void calc_if(countstack *const nums) {
+  printf("IF ");
+  intstackprint(nums);
+  printf("\n");
+  int c = nums->top->value;
+  intpop(nums);
+  int b = nums->top->value;
+  intpop(nums);
+  int a = nums->top->value;
+  intpop(nums);
+
+  if (a > 0) {
+    intpush(nums, b);
+  } else {
+    intpush(nums, c);
+  }
+}
+void calc_n(countstack *const nums) {
+  printf("N ");
+  intstackprint(nums);
+  printf("\n");
+  nums->top->value *= -1;
 }
 
 // }}}
 
-// {{{
+// calculating {{{
 int calculate(string *postfix) {
   countstack nums;
   nums.size = 0;
@@ -257,12 +127,14 @@ int calculate(string *postfix) {
   int num, mresult;
   int mcount = 0;
   while (postfix->data[i] != '\0') {
+    // ignore spaces between tokens
     if (postfix->data[i] == ' ') {
       i++;
       continue;
     }
 
     if (is_digit(postfix->data[i])) {
+
       num = 0;
       while (is_digit(postfix->data[i])) {
         num = num * 10 + (int)(postfix->data[i] - '0');
@@ -271,6 +143,7 @@ int calculate(string *postfix) {
       intpush(&nums, num);
 
     } else if (postfix->data[i] == '-' && is_digit(postfix->data[i + 1])) {
+
       num = 0;
       i++;
       while (is_digit(postfix->data[i])) {
@@ -278,74 +151,35 @@ int calculate(string *postfix) {
         i++;
       }
       intpush(&nums, -1 * num);
+
     } else {
       if (postfix->data[i] == 'N') {
-        printf("N ");
-        intstackprint(&nums);
-        printf("\n");
-        nums.top->value *= -1;
+        calc_n(&nums);
         i++;
       } else if (postfix->data[i] == 'I') {
-        printf("IF ");
-        intstackprint(&nums);
-        printf("\n");
-        int c = nums.top->value;
-        intpop(&nums);
-        int b = nums.top->value;
-        intpop(&nums);
-        int a = nums.top->value;
-        intpop(&nums);
-
-        if (a > 0) {
-          intpush(&nums, b);
-        } else {
-          intpush(&nums, c);
-        }
+        calc_if(&nums);
         i++;
       } else {
-          int result = -1;
-          int val1 = 0;
-          if(nums.size != 0){
-            val1 = nums.top->value;
-          }
-          intpop(&nums);
+        int val1 = 0;
+        if (nums.size != 0) {
+          val1 = nums.top->value;
+        }
+        intpop(&nums);
         switch (postfix->data[i]) {
         case '+':
-          printf("+ %d ", val1);
-          intstackprint(&nums);
-          printf("\n");
-          result = nums.top->value + val1;
-          intpop(&nums);
-          intpush(&nums, result);
+          calc_plus(&nums, &val1);
           break;
         case '-':
-          printf("- %d ", val1);
-          intstackprint(&nums);
-          printf("\n");
-          result = nums.top->value - val1;
-          intpop(&nums);
-          intpush(&nums, result);
+          calc_minus(&nums, &val1);
           break;
         case '*':
-          printf("* %d ", val1);
-          intstackprint(&nums);
-          printf("\n");
-          result = nums.top->value * val1;
-          intpop(&nums);
-          intpush(&nums, result);
+          calc_multiply(&nums, &val1);
           break;
         case '/':
-
-          printf("/ %d ", val1);
-          intstackprint(&nums);
-          printf("\n");
-          if (val1 == 0) {
-            printf("ERROR\n");
+          // if division fails:
+          if (calc_division(&nums, &val1)) {
             return 1;
           }
-          result = nums.top->value / val1;
-          intpop(&nums);
-          intpush(&nums, result);
           break;
 
         case 'M':
@@ -385,7 +219,7 @@ int calculate(string *postfix) {
                   if (mresult < nums.top->value) {
                     mresult = nums.top->value;
                   }
-                    intpop(&nums);
+                  intpop(&nums);
                 }
               }
             }
@@ -399,8 +233,8 @@ int calculate(string *postfix) {
     }
     i++;
   }
-  if(nums.size != 0){
-      printf("%d", nums.top->value);
+  if (nums.size != 0) {
+    printf("%d", nums.top->value);
   }
   freeintstack(&nums);
   return 0;
@@ -452,8 +286,8 @@ int main() {
             appendmax(&postfix, &counter);
           }
           charpop(&stos);
-        } else if(stos.size && stos.top->value[0] == 'I'){
-            intpop(&counter);
+        } else if (stos.size && stos.top->value[0] == 'I') {
+          intpop(&counter);
         }
         break;
       case 'M':
@@ -466,8 +300,8 @@ int main() {
           appendbytable(&postfix, 0, stos.top->value);
           charpop(&stos);
         }
-        if(counter.size && stos.top->value[0]) {
-            counter.top->value++;
+        if (counter.size && stos.top->value[0]) {
+          counter.top->value++;
         }
         break;
       case '.':
