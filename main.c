@@ -123,7 +123,14 @@ int calc_division(countstack *const nums, const int *val1) {
 }
 
 void calc_number(countstack *const nums, const string *postfix,
-                 int *const iterator);
+                 int *const iterator) {
+  int result = 0;
+  while (is_digit(postfix->data[*iterator])) {
+    result = result * 10 + (int)(postfix->data[*iterator] - '0');
+    (*iterator)++;
+  }
+  intpush(nums, result);
+}
 
 void calc_if(countstack *const nums) {
   printf("IF ");
@@ -151,14 +158,64 @@ void calc_n(countstack *const nums) {
 
 // }}}
 
+// more complex calculations (M functions) {{{
+
+void handle_M(string *postfix, int *iter, int *val1, countstack *nums) {
+  (*iter)++;
+  int result = *val1;
+  int argcount = 0;
+  switch (postfix->data[*iter]) {
+  case 'I':
+    (*iter) += 2;
+    while (is_digit(postfix->data[*iter])) {
+      argcount = argcount * 10 + (int)(postfix->data[*iter] - '0');
+      (*iter)++;
+    }
+    printf("MIN%d %d ", argcount, *val1);
+    intstackprint(nums);
+    if (argcount > 1) {
+      for (int j = 0; j < argcount - 1; j++) {
+        if (nums->size != 0) {
+          if (result > nums->top->value) {
+            result = nums->top->value;
+          }
+          intpop(nums);
+        }
+      }
+    }
+    break;
+  case 'A':
+    (*iter) += 2;
+    while (is_digit(postfix->data[*iter])) {
+      argcount = argcount * 10 + (int)(postfix->data[*iter] - '0');
+      (*iter)++;
+    }
+    printf("MAX%d %d ", argcount, *val1);
+    intstackprint(nums);
+    if (argcount > 1) {
+      for (int j = 0; j < argcount - 1; j++) {
+        if (nums->size != 0) {
+          if (result < nums->top->value) {
+            result = nums->top->value;
+          }
+          intpop(nums);
+        }
+      }
+    }
+    break;
+  }
+  intpush(nums, result);
+  printf("\n");
+}
+
+// }}}
+
 // calculating {{{
 int calculate(string *postfix) {
   countstack nums;
-  nums.size = 0;
+  init_intstack(&nums);
 
   int i = 0;
-  int num, mresult;
-  int mcount = 0;
   while (postfix->data[i] != '\0') {
     // ignore spaces between tokens
     if (postfix->data[i] == ' ') {
@@ -167,24 +224,7 @@ int calculate(string *postfix) {
     }
 
     if (is_digit(postfix->data[i])) {
-
-      num = 0;
-      while (is_digit(postfix->data[i])) {
-        num = num * 10 + (int)(postfix->data[i] - '0');
-        i++;
-      }
-      intpush(&nums, num);
-
-    } else if (postfix->data[i] == '-' && is_digit(postfix->data[i + 1])) {
-
-      num = 0;
-      i++;
-      while (is_digit(postfix->data[i])) {
-        num = num * 10 + (int)(postfix->data[i] - '0');
-        i++;
-      }
-      intpush(&nums, -1 * num);
-
+      calc_number(&nums, postfix, &i);
     } else {
       if (postfix->data[i] == 'N') {
         calc_n(&nums);
@@ -194,6 +234,7 @@ int calculate(string *postfix) {
         i++;
       } else {
         int val1 = 0;
+        // prevent bad access
         if (nums.size != 0) {
           val1 = nums.top->value;
         }
@@ -216,51 +257,7 @@ int calculate(string *postfix) {
           break;
 
         case 'M':
-          i++;
-          mresult = val1;
-          switch (postfix->data[i]) {
-          case 'I':
-            i += 2;
-            while (is_digit(postfix->data[i])) {
-              mcount = mcount * 10 + (int)(postfix->data[i] - '0');
-              i++;
-            }
-            printf("MIN%d %d ", mcount, val1);
-            intstackprint(&nums);
-            if (mcount > 1) {
-              for (int j = 0; j < mcount - 1; j++) {
-                if (nums.size != 0) {
-                  if (mresult > nums.top->value) {
-                    mresult = nums.top->value;
-                  }
-                  intpop(&nums);
-                }
-              }
-            }
-            break;
-          case 'A':
-            i += 2;
-            while (is_digit(postfix->data[i])) {
-              mcount = mcount * 10 + (int)(postfix->data[i] - '0');
-              i++;
-            }
-            printf("MAX%d %d ", mcount, val1);
-            intstackprint(&nums);
-            if (mcount > 1) {
-              for (int j = 0; j < mcount - 1; j++) {
-                if (nums.size != 0) {
-                  if (mresult < nums.top->value) {
-                    mresult = nums.top->value;
-                  }
-                  intpop(&nums);
-                }
-              }
-            }
-            break;
-          }
-          intpush(&nums, mresult);
-          mcount = 0;
-          printf("\n");
+          handle_M(postfix, &i, &val1, &nums);
         }
       }
     }
@@ -275,8 +272,7 @@ int calculate(string *postfix) {
 
 // }}}
 
-void end_iter_routine(stack *stos, string *postfix, countstack *counter,
-                      char *buff) {
+void end_iter_routine(stack *stos, string *postfix, countstack *counter) {
   stackprint(stos, postfix);
   appendchar(postfix, '\0');
   printf("\n\n%s\n", postfix->data);
@@ -288,6 +284,8 @@ void end_iter_routine(stack *stos, string *postfix, countstack *counter,
   freecharstack(stos);
   freeintstack(counter);
 }
+
+// main {{{
 
 int main() {
   stack stos;
@@ -338,7 +336,9 @@ int main() {
         break;
       }
     }
-    end_iter_routine(&stos, &postfix, &counter, buff);
+    end_iter_routine(&stos, &postfix, &counter);
   }
   return 0;
 }
+
+// }}}
