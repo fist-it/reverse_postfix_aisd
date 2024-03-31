@@ -1,5 +1,10 @@
 #include "String.h"
 
+void init_string(string *str) {
+  str->length = 0;
+  str->capacity = 0;
+}
+
 void appendchar(string *to, char input) {
   to->data[to->length] = input;
   to->length++;

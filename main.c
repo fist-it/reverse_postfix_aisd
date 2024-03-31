@@ -44,6 +44,39 @@ void appendmax(string *postfix, countstack *counter) { // by default appending
   intpop(counter);
 }
 
+void handle_function(stack *stos, countstack *counter, char *buff) {
+  push(stos, buff);
+  intpush(counter, 1);
+}
+
+void handle_period(stack *stos, string *postfix, countstack *counter) {
+  while (stos->top->value[0] != '(') {
+    appendbytable(postfix, 0, stos->top->value);
+    charpop(stos);
+  }
+  if (counter->size && stos->top->value[0]) {
+    counter->top->value++;
+  }
+}
+
+void handle_close(stack *stos, string *postfix, countstack *counter) {
+  while (stos->top->value[0] != '(') {
+    appendbytable(postfix, 0, stos->top->value);
+    charpop(stos);
+  }
+  charpop(stos);
+  if (stos->size && stos->top->value[0] == 'M') {
+    if (stos->top->value[1] == 'I') {
+      appendmin(postfix, counter);
+    } else {
+      appendmax(postfix, counter);
+    }
+    charpop(stos);
+  } else if (stos->size && stos->top->value[0] == 'I') {
+    intpop(counter);
+  }
+}
+
 // }}}
 
 // simple operator calculations {{{
@@ -242,20 +275,35 @@ int calculate(string *postfix) {
 
 // }}}
 
+void end_iter_routine(stack *stos, string *postfix, countstack *counter,
+                      char *buff) {
+  stackprint(stos, postfix);
+  appendchar(postfix, '\0');
+  printf("\n\n%s\n", postfix->data);
+  calculate(postfix);
+  printf("\n");
+
+  freestr(postfix);
+  printf("\n");
+  freecharstack(stos);
+  freeintstack(counter);
+}
+
 int main() {
   stack stos;
-  stos.size = 0;
+  init_charstack(&stos);
   countstack counter;
-  counter.size = 0;
-
+  init_intstack(&counter);
   string postfix;
-  postfix.length = 0;
-  postfix.capacity = 0;
+  init_string(&postfix);
+
   int input_iter;
   scanf("%d", &input_iter);
   char buff[BUFFSIZE];
-  buff[0] = ' ';
+  // initialising first buff char, so that it wont check uninitialised memory on
+  // loop start
   for (int i = 0; i < input_iter; i++) {
+    buff[0] = ' ';
     while (buff[0] != '.') {
       scanf("%10s", buff);
       switch (buff[0]) {
@@ -274,35 +322,14 @@ int main() {
         push(&stos, buff);
         break;
       case ')':
-        while (stos.top->value[0] != '(') {
-          appendbytable(&postfix, 0, stos.top->value);
-          charpop(&stos);
-        }
-        charpop(&stos);
-        if (stos.size && stos.top->value[0] == 'M') {
-          if (stos.top->value[1] == 'I') {
-            appendmin(&postfix, &counter);
-          } else {
-            appendmax(&postfix, &counter);
-          }
-          charpop(&stos);
-        } else if (stos.size && stos.top->value[0] == 'I') {
-          intpop(&counter);
-        }
+        handle_close(&stos, &postfix, &counter);
         break;
       case 'M':
       case 'I':
-        push(&stos, buff);
-        intpush(&counter, 1); // only so that counting arguments works
+        handle_function(&stos, &counter, buff);
         break;
       case ',':
-        while (stos.top->value[0] != '(') {
-          appendbytable(&postfix, 0, stos.top->value);
-          charpop(&stos);
-        }
-        if (counter.size && stos.top->value[0]) {
-          counter.top->value++;
-        }
+        handle_period(&stos, &postfix, &counter);
         break;
       case '.':
         break;
@@ -311,17 +338,7 @@ int main() {
         break;
       }
     }
-    stackprint(&stos, &postfix);
-    appendchar(&postfix, '\0');
-    printf("\n\n%s\n", postfix.data);
-    calculate(&postfix);
-    printf("\n");
-
-    freestr(&postfix);
-    printf("\n");
-    buff[0] = ' ';
-    freecharstack(&stos);
-    freeintstack(&counter);
+    end_iter_routine(&stos, &postfix, &counter, buff);
   }
   return 0;
 }

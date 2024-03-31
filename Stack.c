@@ -1,5 +1,8 @@
 #include "Stack.h"
 
+void init_charstack(stack *stos) { stos->size = 0; }
+void init_intstack(countstack *stos) { stos->size = 0; }
+
 void push(stack *stos, const char *input) {
   if (!stos->size) {
     stos->top = (charNode *)malloc(sizeof(charNode));

@@ -13,6 +13,8 @@ typedef struct {
   int size;
 } countstack;
 
+void init_charstack(stack *stos);
+void init_intstack(countstack *stos);
 void push(stack *stos, const char *input);
 void intpush(countstack *stos, const int input);
 void intpop(countstack *stos);
